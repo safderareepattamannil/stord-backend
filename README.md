@@ -1,2 +1,2 @@
-# myCloud-backend
-# myCloud-backend
+Stord.
+A selfhosted media manager as an alternative to the big boys.
