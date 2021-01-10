@@ -1,10 +1,24 @@
+const dotenv = require('dotenv').config();
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require('fs')
 const cors = require('cors')
+const mongoose = require('mongoose');
+
+
+// Setup
 const app = express();
 const port = 8342;
+
+// Database Setup
+mongoose.connect(process.env.URI, {useNewUrlParser:true, useUnifiedTopology: true});
+const db = mongoose.connection;
+db.on('error', console.error.bind(console,'connection error'));
+db.once('open', ()=>{
+  console.log('Connected to database');
+})
+
 
 // Serve static files from uploads
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
@@ -41,7 +55,6 @@ app.get("/getfiles", (req, res) => {
       files.forEach(file =>{
         fileNames.push(file);
       })
-
       res.send(fileNames);
     })
   });
@@ -51,12 +64,11 @@ app.get("/getfiles", (req, res) => {
 app.post("/upload", upload.array("files"), (req, res) => {
     const files = req.files;
     console.log(files);
-
     if (!files) {
         const error = new Error("Please upload a file!");
         error.httpStatusCode = 400;
     }
-    
+    // TODO: Add to MONGODB Data BAse
     res.send(files);
 });
 
