@@ -5,7 +5,6 @@ const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const sharp = require("sharp");
 
 // Required Models
 const Media = require("./models/media");
@@ -20,7 +19,7 @@ mongoose.connect(process.env.URI, {
     useUnifiedTopology: true,
 });
 const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error"));
+db.on("error", err => {throw 'Failed to connect to mongodb'});
 db.once("open", () => {
     console.log("Connected to database");
 });
@@ -76,7 +75,6 @@ app.post("/upload", upload.array("files"), (req, res) => {
             name: file.filename,
             dateUploaded: Date.now(),
             dateTaken: Date.now(),
-            location: [-322, 344],
             delete: { marked: false, expiryDate: Date.now() },
             fileSize: file.size,
         });
@@ -84,22 +82,19 @@ app.post("/upload", upload.array("files"), (req, res) => {
         fileModels.push(media);
 
         // TODO : Process image thumbnail / get this working
-
-        sharp(path.join(__dirname, file.filename))
-            .resize({ width: 200 })
-            .toFormat("jpeg")
-            .toFile(path.join(__dirname, `/previews/resized.jpg`));
     });
 
+    // Insert metadata to db
     if (fileModels.length) {
         db.collection("media")
             .insertMany(fileModels)
-            .then((result) => {
-                console.log(`Successfully inserted ${files.length} items!`);
-                return result;
+            .then((res) => {
+                console.log(
+                    `Successfully inserted ${res.files.length} items!`
+                );
             })
-            .catch((err) =>
-                console.error(`Failed to insert documents: ${err}`)
+            .catch((error) =>
+                console.error(`Failed to insert documents: ${error}`)
             );
     }
 
